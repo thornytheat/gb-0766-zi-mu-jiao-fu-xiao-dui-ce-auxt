@@ -1,5 +1,5 @@
 import re
-from fractions import Fraction
+
 from app.problems import Rejection
 from app.modules.clock.timecode import RATIO
 from app.modules.source.reader import tabulate

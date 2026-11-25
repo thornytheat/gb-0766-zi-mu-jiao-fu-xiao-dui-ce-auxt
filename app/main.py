@@ -2,6 +2,7 @@ import os
 from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge
 from .modules.delivery.routes import delivery
+from .modules.licensing.ledger import RevocationLedger
 from .modules.runs.files import CutArchive
 from .modules.runs.routes import runs
 from .problems import Rejection
@@ -12,7 +13,9 @@ def create_app(root=None):
     app = Flask(__name__)
     app.url_map.redirect_defaults = False
     app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
-    app.extensions['cut_archive'] = CutArchive(root or os.getenv('CAPTION_ARCHIVE', 'var/cuts'))
+    archive_root = root or os.getenv('CAPTION_ARCHIVE', 'var/cuts')
+    app.extensions['cut_archive'] = CutArchive(archive_root)
+    app.extensions['revocation_ledger'] = RevocationLedger(app.extensions['cut_archive'].root / 'withdrawals')
     for module in (sheets, runs, delivery):
         app.register_blueprint(module)
 

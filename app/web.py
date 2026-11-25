@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 from .grid_view import HEADERS, LABELS, cells
 from .material import example, material
 from .modules.delivery.checks import verify
@@ -45,7 +45,9 @@ def grid(sheet):
         raise Rejection('NO_SHEET', '未找到校对页', 404)
     stages, manifest, sample = current()
     if sheet == 'delivery' and manifest:
-        verify(archive().read(manifest['id']))
+        entry = archive().read(manifest['id'])
+        register = current_app.extensions['revocation_ledger']
+        verify(entry, register.bans(register.scope_of(entry)))
     return render_template('workbook.html', sheet=sheet, tabs=TABS, sample=sample, manifest=manifest,
                            totals=stages['balance']['counts'], rows=cells(stages, sheet, archive(), manifest),
                            columns=HEADERS[sheet], labels=LABELS, codes=CODES)

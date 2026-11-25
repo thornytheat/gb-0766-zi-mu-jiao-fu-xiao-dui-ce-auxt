@@ -9,6 +9,10 @@ def archive():
     return current_app.extensions['cut_archive']
 
 
+def ledger():
+    return current_app.extensions['revocation_ledger']
+
+
 @runs.get('')
 def index():
     stamps = archive().inventory()
@@ -17,7 +21,7 @@ def index():
 
 @runs.post('')
 def publish():
-    return jsonify(record(archive(), material(request.get_json(silent=True))))
+    return jsonify(record(archive(), material(request.get_json(silent=True)), ledger()))
 
 
 @runs.get('/<key>')
@@ -27,4 +31,6 @@ def detail(key):
 
 @runs.post('/<key>/repeat')
 def repeat(key):
-    return jsonify(record(archive(), archive().read(key)['original']))
+    # Recompute exactly what was archived; a later withdrawal must not rewrite
+    # an earlier version's evidence.
+    return jsonify(record(archive(), archive().read(key)['original'], ledger(), honour=False))

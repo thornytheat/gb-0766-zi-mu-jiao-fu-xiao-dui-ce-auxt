@@ -11,4 +11,5 @@ def digest(blob):
 
 
 def fingerprints(material):
-    return {name: digest(text.encode()) for name, text in material.items()}
+    return {name: digest(text.encode()) if isinstance(text, str) else digest(encode(text))
+            for name, text in material.items()}
